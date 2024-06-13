@@ -1,0 +1,55 @@
+.video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1; /* 비디오가 다른 요소들보다 뒤에 위치 */
+}
+
+video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 화면 비율에 맞게 조정 */
+}
+
+/* 이미지 초기 상태 설정 */
+#buttonImage {
+    display: none; /* 처음에 이미지 숨기기 */
+    position: absolute; /* 절대 위치 설정 */
+    right: 200px; 
+    bottom: 80px; 
+    width: 50px; /* 적절한 크기로 설정 */
+    height: 50px; /* 적절한 크기로 설정 */
+    animation: blink-animation 1s infinite; /* 애니메이션 추가 */
+}
+
+#startImage {
+    display: none;/* 처음에 이미지 숨기기 */
+    position: absolute; /* 절대 위치 설정 */
+    right: 600px; 
+    bottom: 80px; 
+    width: 350px; /* 적절한 크기로 설정 */
+    height: 100px; /* 적절한 크기로 설정 */
+}
+
+#buImage {
+    display: none; /* 처음에 이미지 숨기기 */
+    position: absolute; /* 절대 위치 설정 */
+    right: 230px; 
+    bottom: 60px; 
+    width: 50px; /* 적절한 크기로 설정 */
+    height: 50px; /* 적절한 크기로 설정 */
+    animation: blink-animation 1s infinite; /* 애니메이션 추가 */
+}
+
+/* 반짝임 효과 애니메이션 */
+@keyframes blink-animation {
+    0% { opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { opacity: 0.2; }
+}

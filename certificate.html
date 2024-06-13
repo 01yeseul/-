@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="./images/ryu.jpg">
+    <style>
+
+        @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-image: url('./images/h.png'); /* 배경 이미지 변경 */
+            background-size: cover; /* 배경 이미지를 창에 맞추기 */
+            display: flex; align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: "Galmuri9", sans-serif;
+        }
+        #displayName {
+            position: absolute;
+            right: 430px;
+            top: 285px;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: "Galmuri9", sans-serif;
+
+        }
+        #displayImage{
+            position: absolute;
+            left: 450px;
+            top: 291px;
+            text-align: center;
+
+        }
+        
+
+        .imageContainer {
+            position: absolute;
+            display: flex;
+            flex-direction: column; /* 이미지를 위아래로 배치 */
+            bottom: 100px;
+            right: 350px;
+        }
+        #byeImage {
+            width: 180px;
+            height: 50px;
+            margin-top: 10px; /* 아래 이미지와 간격 조정 */
+        }
+        #againImage {
+            width: 180px;
+            height: 50px;
+            margin-bottom: 10px; /* 위 이미지와 간격 조정 */
+        }
+    </style>
+</head>
+<body>
+    <div id="userInfo">
+        <h1> <span id="displayName"></span></h1>
+        <img id="displayImage" src="" >
+    </div>
+
+    <div class="imageContainer">
+        <a href="./title.html">
+            <img src="images/again.png" id="againImage">
+        </a>
+        <a href="./bye.html">
+            <img src="images/bye.png" id="byeImage">
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var userName = localStorage.getItem("userName");
+            var imageUrl = localStorage.getItem("imageUrl");
+            var audioPlaying = false; // 재생 중인 오디오 여부를 나타내는 변수
+
+            document.getElementById("displayName").textContent = userName;
+            document.getElementById("displayImage").src = imageUrl;
+
+            window.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && !audioPlaying) {
+
+                    const audio = new Audio('certificate.mp3');
+                    audio.play();
+                    audioPlaying = true; 
+                    audio.addEventListener('ended', function() {
+                        audioPlaying = false; 
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

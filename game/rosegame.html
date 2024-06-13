@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>류와 함께하는 캠퍼스 투어</title>
+<link rel="icon" type="image/jpeg" href="../images/ryu.jpg">
+
+<style>
+
+  @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-image: url('../images/wall.jpg'); /* 배경 이미지 변경 */
+    background-size: cover; /* 배경 이미지를 창에 맞추기 */
+    display: flex; align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: "Galmuri9", sans-serif;
+
+  }
+  #player {
+    width: 65px;
+    height: 80px;
+    background-image: url('../images/roseman.png');
+    background-size: cover;
+
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .obstacle {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    top: -50px;
+  }
+  #startButton {
+    display: block;
+    padding: 20px 40px;
+    font-size: 24px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-family: "Galmuri9", sans-serif;
+
+  }
+  #timer {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #fff;
+    background-color: #333;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  #missionClear {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    text-align: center;
+  }
+  #nextStage {
+    display: none;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+    font-family: "Galmuri9", sans-serif;
+    margin-left: 50px;
+  }
+  #angryImage {
+    width: 300px; /* 크기 조정 */
+    height: 50px; /* 크기 조정 */
+    position: absolute;
+    top: 200px;
+    right: 30px;
+  }
+  #infoImage {
+    display: none;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+
+  
+
+  /* 모달 스타일 */
+  .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      font-family: "Galmuri9", sans-serif;
+      text-align: center;
+  }
+
+  .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+  }
+
+  .modal-button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: "Galmuri9", sans-serif;
+  }
+
+  .modal-button:hover {
+      background-color: #45a049;
+  }
+
+</style>
+</head>
+<body>
+    <button id="startButton" onclick="startGame()">시작</button>
+    <img id="infoImage" src="../images/info.jpg" style="display: block; position: absolute; top: 150px; left: 50%; transform: translateX(-50%); z-index: 1;">
+    <div id="player"></div>
+    <div id="timer">시간: 30초</div>
+    <div id="missionClear">
+      <h2>미션 클리어!</h2>
+      <p>다음 단계로 진행하시겠습니까?</p>
+      <button id="nextStage" onclick="confirmNextStage()">다음 단계</button>
+    </div>
+
+    <!-- 모달 요소 추가 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalText"></p>
+            <button id="modalConfirmButton" class="modal-button">확인</button>
+        </div>
+    </div>
+
+<script>
+  const player = document.getElementById("player");
+  const startButton = document.getElementById("startButton");
+  const timerDisplay = document.getElementById("timer");
+  const missionClear = document.getElementById("missionClear");
+  const nextStageButton = document.getElementById("nextStage");
+  const modal = document.getElementById("myModal");
+  const modalText = document.getElementById("modalText");
+  const modalConfirmButton = document.getElementById("modalConfirmButton");
+  const closeButton = document.querySelector(".close");
+  let score = 0;
+  let timer = null;
+  let gameTimer = 30; // 시간을 30초로 변경
+  let isMovingLeft = false;
+  let isMovingRight = false;
+
+  function createObstacle() {
+    const obstacle = document.createElement("img");
+    obstacle.classList.add("obstacle");
+    obstacle.src = "../images/rose.jpg";
+    obstacle.style.width = "50px";
+    obstacle.style.height = "50px";
+    obstacle.style.left = Math.random() * (window.innerWidth - 50) + "px";
+    document.body.appendChild(obstacle);
+
+    const fall = setInterval(() => {
+      const currentTop = obstacle.offsetTop;
+      obstacle.style.top = currentTop + 5 + "px";
+
+      if (currentTop > window.innerHeight) {
+        clearInterval(fall);
+        obstacle.remove();
+        score++;
+        updateScore();
+      }
+
+      const playerRect = player.getBoundingClientRect();
+      const obstacleRect = obstacle.getBoundingClientRect();
+
+      if (
+        playerRect.top < obstacleRect.bottom &&
+        playerRect.bottom > obstacleRect.top &&
+        playerRect.left < obstacleRect.right &&
+        playerRect.right > obstacleRect.left
+      ) {
+        clearInterval(fall);
+        endGame();
+      }
+    }, 10); // 장미가 떨어지는 간격을 10밀리초로 변경
+
+    setTimeout(() => {
+      clearInterval(fall);
+      obstacle.remove();
+    }, 30000); // 30초 후에 장미 삭제
+  }
+
+  function createAngryImage() {
+    const angryImage = document.createElement("img");
+    angryImage.id = "angryImage";
+    angryImage.src = "../images/angry.jpg";
+    document.body.appendChild(angryImage);
+
+    // 2초 후에 angry.jpg를 제거
+    setTimeout(() => {
+      angryImage.remove();
+    }, 2000);
+  }
+
+  function updateScore() {
+    document.title = "점수: " + score;
+  }
+
+  function startGameTimer() {
+    timer = setInterval(() => {
+      gameTimer--;
+      timerDisplay.textContent = "시간: " + gameTimer + "초";
+
+      if (gameTimer === 0) {
+        clearInterval(timer);
+        missionClear.style.display = "block"; // 성공 창을 표시합니다.
+        nextStageButton.style.display = "block"; // 다음 스테이지 버튼을 표시합니다.
+      }
+    }, 1000);
+  }
+
+  function startGame() {
+    startButton.style.display = "none";
+    document.getElementById("infoImage").style.display = "none"; // info.jpg 감춤
+    score = 0;
+    gameTimer = 30; // 시작 시간을 30초로 변경
+    timerDisplay.textContent = "시간: 30초"; // 시작 시간을 표시
+    startGameTimer();
+    timer = setInterval(createObstacle, 200); // 장미 생성 간격을 200밀리초로 변경
+
+    // 10초 후에 angry.jpg 표시
+    setTimeout(createAngryImage, 10000);
+  }
+
+  function showModal(message, callback) {
+      modalText.textContent = message;
+      modal.style.display = "block";
+
+      modalConfirmButton.onclick = function() {
+          modal.style.display = "none";
+          callback();
+      }
+
+      closeButton.onclick = function() {
+          modal.style.display = "none";
+      }
+
+      window.onclick = function(event) {
+          if (event.target == modal) {
+              modal.style.display = "none";
+          }
+      }
+  }
+
+  function endGame() {
+      clearInterval(timer);
+      clearInterval(gameTimer);
+      showModal("이런이런, 이렇게 해서는 안된다고! 다시다시!!!", function() {
+          location.reload(); // 게임 재시작
+      });
+  }
+
+  function confirmNextStage() {
+      showModal("이정도면 된 것 같군. 다음 단계로 가볼까 신입생?", function() {
+          window.location.href = "../field.html"; // 다음 단계 페이지로 이동
+      });
+  }
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowLeft") {
+      isMovingLeft = true;
+    } else if (event.key === "ArrowRight") {
+      isMovingRight = true;
+    }
+  });
+
+  document.addEventListener("keyup", function(event) {
+    if (event.key === "ArrowLeft") {
+      isMovingLeft = false;
+    } else if (event.key === "ArrowRight") {
+      isMovingRight = false;
+    }
+  });
+
+  function movePlayer() {
+    if (isMovingLeft) {
+      const currentLeft = player.offsetLeft;
+      const newLeft = currentLeft - 10;
+
+      if (newLeft >= 0) {
+        player.style.left = newLeft + "px";
+      }
+    } else if (isMovingRight) {
+      const currentLeft = player.offsetLeft;
+      const newLeft = currentLeft + 10;
+
+      if (newLeft <= window.innerWidth - player.offsetWidth) {
+        player.style.left = newLeft + "px";
+      }
+    }
+  }
+
+  setInterval(movePlayer, 50); // 플레이어 움직임 조정
+  
+  let audio = null; // 오디오 요소를 저장할 변수
+
+  window.addEventListener('keydown', function(event) {
+    // 스페이스 바를 눌렀을 때
+    if (event.code === 'Space') {
+      // 오디오 요소 생성
+      audio = new Audio('MP_저 놈 잡아.mp3');
+      // 오디오 반복 재생 설정
+      audio.loop = true;
+      // 오디오 재생
+      audio.play();
+    }
+  });
+</script>
+
+
+</body>
+</html>

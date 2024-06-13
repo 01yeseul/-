@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="./images/ryu.jpg">
+    <link href="css/style.css" rel="stylesheet" />
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .video-fit {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video src="./css/last.mp4" muted autoplay class="video-fit"></video>
+    </div>
+
+    <a href="certificate.html">
+        <img src="images/next.png" id="buImage">
+    </a>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var video = document.querySelector('.video-fit');
+            var buImage = document.getElementById('buImage');
+            var audioPlaying = false; // 재생 중인 오디오 여부를 나타내는 변수
+            
+            video.addEventListener('ended', function() {
+                buImage.style.display = 'block';
+            }, false);
+
+
+            window.addEventListener('keydown', function(event) {
+                // 스페이스 바를 눌렀을 때 && 재생 중인 오디오가 없을 때
+                if (event.code === 'Space' && !audioPlaying) {
+                    // 오디오 재생
+                    const audio = new Audio('last.mp3');
+                    audio.play();
+                    audioPlaying = true; // 재생 중인 오디오가 있음을 표시
+                    audio.addEventListener('ended', function() {
+                        audioPlaying = false; // 오디오 재생이 끝났을 때 표시 해제
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

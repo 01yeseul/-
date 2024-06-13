@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="./images/ryu.jpg">
+    <style>
+        @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: "Galmuri9", sans-serif; /* 글씨체 적용 */
+        }
+
+        h1, label, p { 
+            font-family: "Galmuri9", sans-serif;
+        }
+
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        #userInfoForm {
+            background-image: url(./images/002.png);
+            background-size: 100% 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 50px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: -250px; /* 약간 더 위로 조정 */
+        }
+
+        hr {
+            width: 50%;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border: 1px dashed #000;
+        }
+
+        #imagePreview {
+            margin-top: 20px;
+            display: none;
+        }
+
+        #imagePreview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+        }
+
+        .convert-button, .enter-button {
+            text-align: center;
+            font-size: small;
+            font-family: "Galmuri9", sans-serif;
+            background-color: #f0f0f0;
+            padding: 3px 5px;
+            border-radius: 3px;
+            border: 1px solid #616161; /* 테두리 색상 및 두께 추가 */
+        }
+
+        .convert-button:hover, .enter-button:hover {
+            background-color: #bbbbbb9a; /* Darker green */
+        }
+
+        .fileimg {
+            text-align: center;
+            font-size: small;
+            font-family: "Galmuri9", sans-serif;
+        }
+
+        .custom-file-label {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 3px 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            font-size: small;
+            font-family: "Galmuri9", sans-serif;
+            border: 1px solid #616161; /* 테두리 색상 및 두께 추가 */
+        }
+
+        .custom-file-label:hover {
+            background-color: #bbbbbb9a; /* Darker green */
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            font-family: "Galmuri9", sans-serif;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: "Galmuri9", sans-serif;
+        }
+
+        .modal-button:hover {
+            background-color: #45a049;
+        }
+
+        /* 선택한 파일명을 표시할 스타일 */
+        #fileNameDisplay {
+           
+            margin-bottom: 15px;
+            font-size: small;
+            font-family: "Galmuri9", sans-serif;
+        }
+
+    </style>
+</head>
+<body>
+    <video id="video-background" autoplay muted loop>
+        <source src="./css/run.mp4" type="video/mp4">
+    </video>
+
+    <form id="userInfoForm">
+        <h1>류와 함께 하는 조선대학교 탐방</h1>
+        <hr>
+        <label for="userName">이름:</label>
+        <input type="text" id="userName" name="userName"><br><br>
+        <label for="userImage">이미지:</label>
+        <input type="file" id="userImage" class="fileimg" name="userImage" style="display:none;">
+        <label for="userImage" class="custom-file-label">파일 선택</label><br><br>
+        <div id="fileNameDisplay"></div>
+        <input type="button" value="이미지 변환" class="convert-button" onclick="convertImage()"><br><br>
+        <input type="button" value="입장하기" class="enter-button" onclick="checkImage()">
+        <div id="imagePreview">
+            <p>이미지 URL: <span id="imageUrlDisplay"></span></p>
+            <img id="imageElement" src="" alt="Image Preview">
+        </div>
+    </form>
+
+    <!-- 모달 요소 추가 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalText"></p>
+            <button id="modalConfirmButton" class="modal-button">확인</button>
+        </div>
+    </div>
+
+    <script>
+        var imageUrl = "";
+
+        // 파일 선택 시 파일명을 표시하는 함수
+        document.getElementById("userImage").addEventListener("change", function() {
+            var fileName = this.files[0] ? this.files[0].name : "파일이 선택되지 않았습니다.";
+            document.getElementById("fileNameDisplay").textContent = "선택된 파일: " + fileName;
+        });
+
+        function showModal(message, callback) {
+            var modal = document.getElementById("myModal");
+            var modalText = document.getElementById("modalText");
+            var modalConfirmButton = document.getElementById("modalConfirmButton");
+
+            modalText.textContent = message;
+            modal.style.display = "block";
+
+            modalConfirmButton.onclick = function() {
+                modal.style.display = "none";
+                callback();
+            }
+
+            var closeButton = document.querySelector(".close");
+            closeButton.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function convertImage() {
+            var userImage = document.getElementById("userImage").files[0];
+            if (!userImage) {
+                showModal("이미지가 업로드되지 않았습니다!", function() {});
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("file", userImage);
+
+            fetch('http://localhost:5000/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showModal("Error: " + data.error, function() {});
+                    return;
+                }
+                var imageUrl = data.file_url;
+                document.getElementById("imageUrlDisplay").textContent = imageUrl;
+                document.getElementById("imageElement").src = imageUrl;
+                document.getElementById("imagePreview").style.display = 'block';
+
+                localStorage.setItem("userName", document.getElementById("userName").value);
+                localStorage.setItem("imageUrl", imageUrl);
+                showModal(document.getElementById("userName").value + "님의 이미지가 업로드되었습니다.", function() {
+                    window.location.href = "gate.html";
+                });
+            })
+            .catch(error => {
+                console.error("Error uploading image:", error);
+                showModal("이미지 업로드 중 오류가 발생했습니다.", function() {});
+            });
+        }
+
+        function checkImage() {
+            var userName = document.getElementById("userName").value;
+            var userImage = document.getElementById("userImage").files[0];
+
+            if (!userImage) {
+                showModal("이미지가 업로드되지 않았습니다!", function() {});
+                return;
+            }
+            localStorage.setItem("userName", userName);
+            localStorage.setItem("imageUrl", imageUrl);
+
+            showModal(userName + "님의 이미지가 업로드되었습니다.", function() {
+                window.location.href = "gate.html";
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var audioPlaying = false; // 재생 중인 오디오 여부를 나타내는 변수
+            
+            window.addEventListener('keydown', function(event) {
+                // 스페이스 바를 눌렀을 때 && 재생 중인 오디오가 없을 때
+                if (event.code === 'Space' && !audioPlaying) {
+                    // 오디오 재생
+                    const audio = new Audio('main.mp3');
+                    audio.play();
+                    audioPlaying = true; // 재생 중인 오디오가 있음을 표시
+                    audio.addEventListener('ended', function() {
+                        audioPlaying = false; // 오디오 재생이 끝났을 때 표시 해제
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

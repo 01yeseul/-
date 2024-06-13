@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="./images/ryu.jpg">
+    <link href="css/style.css" rel="stylesheet" />
+
+</head>
+<body>
+    <div class="video-container">
+        <video src="./css/rose.mp4" muted autoplay class="video-fit" ></video>
+
+
+        <a href="./game/rosegame.html">
+            <img src="images/start.png" id="startImage">
+        </a>
+                
+       
+    
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var video = document.querySelector('.video-fit');
+            var startImage = document.getElementById('startImage');
+            var audioPlaying = false; 
+            
+            video.addEventListener('ended', function() {
+                startImage.style.display = 'block';
+            }, false);
+            
+            window.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && !audioPlaying) {
+                    
+                    const audio = new Audio('rose.mp3');
+                    audio.play();
+                    audioPlaying = true; 
+                    audio.addEventListener('ended', function() {
+                        audioPlaying = false; 
+                    });
+                }
+            });
+        });
+    </script>
+        
+</body>
+</html>

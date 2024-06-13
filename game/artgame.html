@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>류와 함께하는 캠퍼스 투어</title>
+  <link rel="icon" type="image/jpeg" href="../images/ryu.jpg">
+
+  <style>
+    @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+
+    .card {
+      width: 130px;
+      height: 190px;
+      background-image: url("../images/card.png");
+      margin: 5px;
+      display: inline-block;
+      background-size: cover;
+      background-position: center;
+      text-align: center;
+      line-height: 150px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    
+    .timer {
+      font-size: 1.5em;
+      padding: 10px 20px;
+      border-radius: 10px;
+      color: black;
+      font-weight: bold;
+      font-family: "Galmuri9", sans-serif;
+      
+    }
+    .game-board {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      margin-top: 100px; /* 페이지 아래로 이동 */
+
+    }
+    .card-row {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    body {
+      background-image: url('../images/artgamebg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      height: 100vh;
+      margin: 0;
+      font-family: "Galmuri9", sans-serif;
+
+    }
+
+    /* 모달 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      font-family: "Galmuri9", sans-serif;
+      text-align: center;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .modal-button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: "Galmuri9", sans-serif;
+    }
+
+    .modal-button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  
+    <div class="timer">TIME: <span id="time">30</span>s</div>
+  
+  <div class="game-board">
+    <!-- 카드를 동적으로 생성할 공간 -->
+  </div>
+  <!-- 모달 요소 추가 -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p id="modalText"></p>
+        <button id="modalConfirmButton" class="modal-button">확인</button>
+    </div>
+ </div>
+
+  <script>
+    const cards = [
+      '../images/image_a.jpg', '../images/image_a.jpg', '../images/image_b.jpg', '../images/image_b.jpg', 
+      '../images/image_c.jpg', '../images/image_c.jpg', '../images/image_d.jpg', '../images/image_d.jpg', 
+      '../images/image_ee.jpg', '../images/image_ee.jpg', '../images/image_f.jpg', '../images/image_f.jpg'
+    ];
+    let flippedCards = [];
+    let matchedCards = [];
+    let timer;
+    let timeLeft = 30;
+    let singleCardTimeout;
+    const modal = document.getElementById("myModal");
+    const modalText = document.getElementById("modalText");
+    const modalConfirmButton = document.getElementById("modalConfirmButton");
+    const closeButton = document.querySelector(".close");
+
+    function showModal(message, callback) {
+      modalText.textContent = message;
+      modal.style.display = "block";
+
+      modalConfirmButton.onclick = function() {
+          modal.style.display = "none";
+          callback();
+      }
+
+      closeButton.onclick = function() {
+          modal.style.display = "none";
+      }
+
+      window.onclick = function(event) {
+          if (event.target == modal) {
+              modal.style.display = "none";
+          }
+      }
+  }
+
+    function shuffle(array) {
+      let currentIndex = array.length, temporaryValue, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+      return array;
+    }
+
+    function createBoard() {
+      const gameBoard = document.querySelector('.game-board');
+      gameBoard.innerHTML = '';
+      const shuffledCards = shuffle(cards);
+      const numRows = 3;
+      const numCols = 4;
+      for (let i = 0; i < numRows; i++) {
+        const row = document.createElement('div');
+        row.classList.add('card-row');
+        for (let j = 0; j < numCols; j++) {
+          const index = i * numCols + j;
+          if (index >= shuffledCards.length) break;
+          const card = shuffledCards[index];
+          const cardElement = document.createElement('div');
+          cardElement.classList.add('card');
+          cardElement.dataset.card = card;
+          cardElement.dataset.index = index;
+          cardElement.style.backgroundImage = `url(${card})`; // 카드 이미지 미리 보여주기
+          row.appendChild(cardElement);
+        }
+        gameBoard.appendChild(row);
+      }
+
+      setTimeout(() => {
+        // 카드 뒤집기
+        document.querySelectorAll('.card').forEach(card => {
+          card.style.backgroundImage = '';
+        });
+        gameBoard.addEventListener('click', handleCardClick);
+      }, 800); // 0.8초 후 카드 뒤집기
+    }
+
+    function handleCardClick(event) {
+      const clickedCard = event.target;
+      if (clickedCard.classList.contains('matched') || clickedCard === event.currentTarget) {
+        return;
+      }
+      if (flippedCards.length === 2) {
+        return;
+      }
+      clickedCard.style.backgroundImage = `url(${clickedCard.dataset.card})`;
+      flippedCards.push(clickedCard);
+      if (flippedCards.length === 2) {
+        clearTimeout(singleCardTimeout);
+        if (flippedCards[0].dataset.card === flippedCards[1].dataset.card) {
+          flippedCards.forEach(card => card.classList.add('matched'));
+          matchedCards.push(...flippedCards);
+          flippedCards = [];
+          if (matchedCards.length === cards.length) {
+            clearInterval(timer);
+            setTimeout(() => {
+              showModal('잘했어! 졸업장 수여식으로 이동~', function() {
+                window.location.href = '../last.html';
+              });
+            }, 100);
+          }
+        } else {
+          setTimeout(() => {
+            flippedCards.forEach(card => card.style.backgroundImage = '');
+            flippedCards = [];
+          }, 1000);
+        }
+      } else {
+        singleCardTimeout = setTimeout(() => {
+          if (flippedCards.length === 1) {
+            flippedCards[0].style.backgroundImage = '';
+            flippedCards = [];
+          }
+        }, 5000);
+      }
+    }
+
+    function startTimer() {
+      const timerElement = document.getElementById('time');
+      timer = setInterval(() => {
+        timeLeft -= 1;
+        timerElement.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          setTimeout(() => {
+            showModal('다시 기회 줄게! 한 번 더 해봐', resetGame);
+          }, 100);
+        }
+      }, 1000);
+    }
+
+    function resetGame() {
+      flippedCards = [];
+      matchedCards = [];
+      timeLeft = 30;
+      document.getElementById('time').textContent = timeLeft;
+      createBoard();
+      startTimer();
+    }
+
+    createBoard();
+    startTimer();
+
+    window.addEventListener('keydown', function(event) {
+      if (event.code === 'Space') {
+        const audio = new Audio('./MP_마법사 키우기.mp3');
+        audio.play();
+      }
+    });
+  </script>
+</body>
+</html>

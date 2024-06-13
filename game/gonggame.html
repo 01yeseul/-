@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="../images/ryu.jpg">
+
+    <style>
+        @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+
+        body {
+            background-image: url('../images/fieldbg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Galmuri9', sans-serif;
+        }
+
+        canvas {
+            border: 1px solid white;
+            background-color: white;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+          }
+      
+          .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            font-family: "Galmuri9", sans-serif;
+            text-align: center;
+          }
+      
+          .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+          }
+      
+          .close:hover,
+          .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+          }
+      
+          .modal-button {
+            padding: 10px 20px;
+            margin-left: 160px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-family: "Galmuri9", sans-serif;
+          }
+      
+          .modal-button:hover {
+            background-color: #45a049;
+          }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- 모달 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p id="modalText"></p>
+            <button id="confirmButton" class="modal-button" style="display: none;">확인</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const paddle = {
+            x: 370,
+            y: 500,
+            width: 120,
+            height: 20,
+            speed: 5
+        };
+
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 10,
+            speedX: 3,
+            speedY: 3,
+            isMoving: false
+        };
+
+        const brickWidth = 120;
+        const brickHeight = 30;
+        const brickPadding = 10;
+        const brickRows = 2;
+        const brickColumns = 5;
+        const totalBricksWidth = brickColumns * (brickWidth + brickPadding) - brickPadding;
+        const brickOffsetLeft = (canvas.width - totalBricksWidth) / 2;
+        const brickOffsetTop = 50;
+
+        let bricks = [];
+
+        for (let i = 0; i < brickColumns; i++) {
+            for (let j = 0; j < brickRows; j++) {
+                const brickX = brickOffsetLeft + i * (brickWidth + brickPadding);
+                const brickY = brickOffsetTop + j * (brickHeight + brickPadding);
+                bricks.push({
+                    x: brickX,
+                    y: brickY,
+                    width: brickWidth,
+                    height: brickHeight
+                });
+            }
+        }
+
+        let gameRunning = false;
+        let timer = 30;
+        let intervalId;
+
+        const ballImage = new Image();
+        ballImage.src = '../images/basketball.jpg';
+
+        const brickImage = new Image();
+        brickImage.src = '../images/bricks.png';
+
+        function drawPaddle() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        }
+
+        function drawBall() {
+            ctx.drawImage(ballImage, ball.x - ball.size, ball.y - ball.size, ball.size * 2, ball.size * 2);
+        }
+
+        function drawBricks() {
+            bricks.forEach(brick => {
+                ctx.drawImage(brickImage, brick.x, brick.y, brick.width, brick.height);
+            });
+        }
+
+        function drawTimer() {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`TIME: ${timer}`, 10, 30);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPaddle();
+            drawBall();
+            drawBricks();
+            drawTimer();
+        }
+
+        function update() {
+            if (ball.isMoving) {
+                ball.x += ball.speedX;
+                ball.y += ball.speedY;
+
+                if (ball.x <= 0 || ball.x + ball.size >= canvas.width) {
+                    ball.speedX *= -1;
+                }
+
+                if (ball.y <= 0) {
+                    ball.speedY *= -1;
+                }
+
+                if (ball.y + ball.size >= paddle.y && ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+                    ball.speedY *= -1;
+                }
+
+                const hitIndex = bricks.findIndex(brick => {
+                    return ball.x + ball.size >= brick.x && ball.x <= brick.x + brick.width &&
+                           ball.y + ball.size >= brick.y && ball.y <= brick.y + brick.height;
+                });
+
+                if (hitIndex !== -1) {
+                    bricks.splice(hitIndex, 1);
+                    ball.speedY *= -1;
+                }
+
+                if (bricks.length === 0 && gameRunning) {
+                    clearInterval(intervalId);
+                    gameRunning = false;
+                    setTimeout(() => {
+                        showModal('후훗 이겼군 다음으로 가보자고!!', '../book.html');
+                    }, 100);
+                }
+                
+                if (ball.y + ball.size >= canvas.height || (ball.y + ball.size >= paddle.y && ball.x < paddle.x && ball.x + ball.size > paddle.x + paddle.width)) {
+                    clearInterval(intervalId);
+                    gameRunning = false;
+                    setTimeout(() => {
+                        showModal('졌네 졌어 이것도 못하니?! 다시해!', null);
+                    }, 100);
+                }
+            }
+        }
+
+        function gameLoop() {
+            draw();
+            update();
+            if (gameRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        canvas.addEventListener('click', () => {
+            if (!gameRunning) {
+                ball.speedX = 3;
+                ball.speedY = 3;
+                ball.isMoving = true;
+                gameRunning = true;
+                intervalId = setInterval(() => {
+                    timer--;
+                    if (timer <= 0) {
+                        clearInterval(intervalId);
+                        gameRunning = false;
+                        setTimeout(() => {
+                            showModal('30초 동안 이걸 못 깨다니 -.- 다시 한 번 더 기회줄게.', null);
+                        }, 100);
+                    }
+                }, 1000);
+                gameLoop();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameRunning) {
+                const relativeX = e.clientX - canvas.offsetLeft;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                }
+            }
+        });
+
+        ballImage.onload = () => {
+            brickImage.onload = () => {
+                draw();
+            };
+        };
+
+        
+
+        function showModal(message, confirmMessage) {
+            const modal = document.getElementById('myModal');
+            const modalText = document.getElementById('modalText');
+            const confirmButton = document.getElementById('confirmButton');
+
+            modalText.innerHTML = message;
+
+            if (confirmMessage) {
+                confirmButton.style.display = 'block';
+                confirmButton.onclick = () => {
+                    closeModal();
+                    window.location.href = confirmMessage;
+                };
+            } else {
+                confirmButton.style.display = 'block';
+                confirmButton.onclick = () => {
+                    closeModal();
+                };
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('myModal');
+            modal.style.display = 'none';
+            location.reload();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('myModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+
+        window.addEventListener('keydown', function (event) {
+            // 스페이스 바를 눌렀을 때
+            if (event.code === 'Space') {
+              // 오디오 재생
+              const audio = new Audio('MP_허둥지둥 도둑이야!.mp3');
+              audio.play();
+            }
+          });
+
+    </script>
+</body>
+</html>

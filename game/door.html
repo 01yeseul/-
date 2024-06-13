@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>류와 함께하는 캠퍼스 투어</title>
+  <link rel="icon" type="image/jpeg" href="../images/ryu.jpg">
+
+  <style>
+    @import url("https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css");
+
+    body {
+      font-family: "Galmuri9", sans-serif;
+      text-align: center;
+      margin-top: -20px;
+      background-image: url('../images/secret.png');
+      /* 배경 이미지 변경 */
+      background-size: cover;
+      /* 배경 이미지를 창에 맞추기 */
+    }
+
+    .door {
+      display: inline-block;
+      padding: 0;
+      margin: 20px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.5s ease;
+      /* 애니메이션 속도를 조금 늦춤 */
+    }
+
+    img {
+      max-width: 200px;
+      /* 이미지 최대 너비 조정 */
+      max-height: 200px;
+      /* 이미지 최대 높이 조정 */
+    }
+
+    #startButton {
+      font-family: "Galmuri9", sans-serif;
+
+      font-size: 20px;
+      /* 버튼 글꼴 크기 조정 */
+      padding: 15px 30px;
+      /* 버튼 안쪽 여백 조정 */
+      margin-top: 20px;
+      /* 버튼 위쪽 여백 조정 */
+    }
+
+    #confirmButton{
+      font-family: "Galmuri9", sans-serif;
+      margin-left: 150px;
+      
+     
+      margin-top: 20px;
+      /* 버튼 위쪽 여백 조정 */
+
+    }
+
+    /* 모달 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      font-family: "Galmuri9", sans-serif;
+      text-align: center;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .modal-button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: "Galmuri9", sans-serif;
+    }
+
+    .modal-button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+
+<body>
+  <br> <br> <br> <br> <br> <br> <br> <br> <br> <br>
+
+  <div id="output"></div>
+  <div id="doors">
+    <div class="door" id="door1" onclick="guessDoor(1)"><img src="../images/door.jpg" alt="문"></div>
+    <div class="door" id="door2" onclick="guessDoor(2)"><img src="../images/door.jpg" alt="문"></div>
+    <div class="door" id="door3" onclick="guessDoor(3)"><img src="../images/door.jpg" alt="문"></div>
+  </div>
+
+  <!-- 모달 -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <p id="modalText"></p>
+      <button id="confirmButton" class="modal-button" style="display: none;" onclick="closeModal()">확인</button>
+    </div>
+  </div>
+
+  
+  <script>
+    let ballPosition;
+    let gameOver = false;
+
+    function startGame() {
+      if (gameOver) return; // 게임 중에는 시작 버튼을 누를 수 없음
+      ballPosition = Math.floor(Math.random() * 3) + 1;
+      document.getElementById('output').innerHTML = '난 여기 있다구 신입생~!! 어디 한번 잘 찾아봐!';
+      showBall();
+      document.getElementById('startButton').style.display = 'none'; // 시작 버튼 숨기기
+      setTimeout(function () {
+        hideBall();
+        shuffleDoors();
+      }, 1000);
+    }
+
+    function showBall() {
+      let doorWithBall = document.getElementById('door' + ballPosition);
+      doorWithBall.innerHTML = '<img src="../images/smile.png" alt="스마일">';
+    }
+
+    function hideBall() {
+      let doors = document.getElementsByClassName('door');
+      for (let i = 0; i < doors.length; i++) {
+        doors[i].innerHTML = '<img src="../images/door.jpg" alt="문">';
+      }
+      document.getElementById('output').innerHTML = '문을 섞습니다. 잠시 기다려주세요.';
+    }
+
+    function guessDoor(guess) {
+      if (gameOver) return;
+      if (guess === ballPosition) {
+        document.getElementById('output').innerHTML = '오호~~ 제법 눈썰미가 있는데 신입생?';
+        showBall();
+        setTimeout(function () {
+          showModal('잘했어~ 다음 장소인 본관으로 넘어가자 신입생!!!','../mainbuild.html'); 
+        }, 1000);
+      } else {
+        document.getElementById('output').innerHTML = '류 찾기 실패!!!';
+        showBall();
+        setTimeout(function () {
+          showModal('실패 : 이런이런 느려~~!! 더 집중해서 다시!!', null);
+        }, 1000);
+      }
+      gameOver = true;
+    }
+
+    function closeModal(confirmMessage) {
+      const modal = document.getElementById('myModal');
+      modal.style.display = 'none';
+      if (gameOver && !confirmMessage) {
+        location.reload(); // 페이지 새로고침으로 게임 재시작
+      } else if (confirmMessage) {
+        window.location.href = confirmMessage; // 다음 스테이지로 이동
+      }
+    }
+    
+    function showModal(message, confirmMessage) {
+      const modal = document.getElementById('myModal');
+      const modalText = document.getElementById('modalText');
+      const confirmButton = document.getElementById('confirmButton');
+
+      modalText.innerHTML = message;
+      if (confirmMessage) {
+        confirmButton.style.display = 'none'; // 다음 스테이지 버튼을 추가하는 경우
+        modalText.innerHTML += '<br><br><button class="modal-button" onclick="closeModal(\'' + confirmMessage + '\')">확인</button>';
+      } else {
+        confirmButton.style.display = 'block'; // 확인 버튼을 표시
+      }
+      modal.style.display = 'block';
+    }
+    
+    
+    
+
+    function shuffleDoors() {
+      document.getElementById('output').innerHTML = '문을 섞는 중입니다.';
+      let moves = 25; // 섞는 횟수
+      let doors = document.getElementsByClassName('door');
+      let i = 0;
+      let interval = setInterval(function () {
+        if (i >= moves) {
+          clearInterval(interval);
+          document.getElementById('output').innerHTML = '섞기 완료! 류가 숨어 있는 문을 골라보세요!';
+          return;
+        }
+        let randomIndex1 = Math.floor(Math.random() * doors.length);
+        let randomIndex2 = Math.floor(Math.random() * doors.length);
+        let randomIndex3 = Math.floor(Math.random() * doors.length);
+
+        while (randomIndex1 === randomIndex2) {
+          randomIndex2 = Math.floor(Math.random() * doors.length);
+        }
+        let tempHTML = doors[randomIndex1].innerHTML;
+        doors[randomIndex1].innerHTML = doors[randomIndex2].innerHTML;
+        doors[randomIndex2].innerHTML = tempHTML;
+        doors[randomIndex1].style.transition = 'transform 0.25s ease'; // 애니메이션 속도를 조금 늦춤
+        doors[randomIndex2].style.transition = 'transform 0.25s ease'; // 애니메이션 속도를 조금 늦춤
+        doors[randomIndex1].style.transform = 'translateX(' + (randomIndex2 - randomIndex1) * 100 + 'px)';
+        doors[randomIndex2].style.transform = 'translateX(' + (randomIndex1 - randomIndex2) * 100 + 'px)';
+        setTimeout(function () {
+          doors[randomIndex1].style.transform = '';
+          doors[randomIndex2].style.transform = '';
+        }, 300); // 애니메이션 지속 시간을 조금 늦춤
+        i++;
+      }, 300); // 애니메이션 간격을 살짝 늦춤
+    }
+
+
+    window.addEventListener('keydown', function (event) {
+      // 스페이스 바를 눌렀을 때
+      if (event.code === 'Space') {
+        // 오디오 재생
+        const audio = new Audio('MP_갤러그풍 인트로.mp3');
+        audio.play();
+      }
+    });
+  </script>
+  </script>
+  <button id="startButton" onclick="startGame()">게임 시작</button>
+</body>
+
+</html>

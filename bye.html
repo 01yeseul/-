@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>류와 함께하는 캠퍼스 투어</title>
+    <link rel="icon" type="image/jpeg" href="./images/ryu.jpg">
+    <link href="css/style.css" rel="stylesheet" />
+
+    <style>
+        #firstImage {
+            display: none;/* 처음에 이미지 숨기기 */
+            position: absolute; /* 절대 위치 설정 */
+            right: 600px; 
+            bottom: 350px; 
+            width: 350px; /* 적절한 크기로 설정 */
+            height: 100px; /* 적절한 크기로 설정 */
+        }
+    </style>
+
+</head>
+<body>
+    <div class="video-container">
+        <video src="./css/bye.mp4" muted autoplay class="video-fit" ></video>
+        <a href="title.html">
+            <img src="./images/first.png" id="firstImage">
+        </a>
+                
+       
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var video = document.querySelector('.video-fit');
+            var startImage = document.getElementById('firstImage');
+            var audioPlaying = false; // 재생 중인 오디오 여부를 나타내는 변수
+            
+            video.addEventListener('ended', function() {
+                startImage.style.display = 'block';
+            }, false);
+            
+            window.addEventListener('keydown', function(event) {
+                // 스페이스 바를 눌렀을 때 && 재생 중인 오디오가 없을 때
+                if (event.code === 'Space' && !audioPlaying) {
+                    // 오디오 재생
+                    const audio = new Audio('bye.mp3');
+                    audio.play();
+                    audioPlaying = true; // 재생 중인 오디오가 있음을 표시
+                    audio.addEventListener('ended', function() {
+                        audioPlaying = false; // 오디오 재생이 끝났을 때 표시 해제
+                    });
+                }
+            });
+        });
+    </script>
+        
+</body>
+</html>
